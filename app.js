@@ -6,8 +6,6 @@ window.onload = function() {
 	var app = new Application();
 	var inputer = new Inputer();
 
-	
-
 // Design elements and adding to page
 	app.initElems(app.input, app.startBtn, app.stopBtn, app.img);
 
@@ -16,30 +14,19 @@ window.onload = function() {
 
 // Event listener for Start button
 	app.startBtn.addEventListener('click', function() {
-		
 		app.start();
-
-		if (app.inputValue !== ''){
-
-		// Event listener for pressing key
+	
+			// Event listener for pressing key
 			window.addEventListener('keydown', function() {
 				if (event.shiftKey) {
-					var newValue = parseInt(inputer.getInputValue(app.input));
-					if (app.deg !== undefined) {
-					app.deg = app.deg + newValue;
-					}
-					else {
-						app.deg = newValue;
-					}
+					app.degDelta = parseInt(inputer.getInputValue(app.input));
 					app.keyShiftHandler(event.keyCode);
 				}
 				else {
 					app.inputValue = inputer.getInputValue(app.input);
 					app.keyHandler(event.keyCode);
 				}
-				
 			});
-		}
 	});
 
 // Event listener for Stop button
@@ -47,20 +34,21 @@ window.onload = function() {
 		
 		app.stop();
 
-		// window.removeEventListener('keydown', function() {
-		// 	app.inputValue = inputer.getInputValue(app.input);
-		// 	app.keyHandler(event.keyCode);
-		// });
-
-		// window.removeEventListener('keydown', function() {
-		// 	app.deg = inputer.getInputValue(app.input);
-		// 	app.keyShiftHandler(event.keyCode);
-		// });
+		window.removeEventListener('keydown', function() {
+			if (event.shiftKey) {
+				app.degDelta = parseInt(inputer.getInputValue(app.input));
+				app.keyShiftHandler(event.keyCode);
+			}
+			else {
+				app.inputValue = inputer.getInputValue(app.input);
+				app.keyHandler(event.keyCode);
+			}
+		});
 	});	
 }
 
 // class Application
-function Application(input, startBtn, stopBtn, img, imgPosition, inputValue, deg) {
+function Application(input, startBtn, stopBtn, img, imgPosition, inputValue, deg, degDelta) {
 	this.input = input;
 	this.startBtn = startBtn;
 	this.stopBtn = stopBtn;
@@ -68,6 +56,7 @@ function Application(input, startBtn, stopBtn, img, imgPosition, inputValue, deg
 	this.imgPosition = imgPosition;
 	this.inputValue = inputValue;
 	this.deg = deg;
+	this.degDelta = degDelta;
 }
 
 // Start application function
@@ -111,6 +100,7 @@ Application.prototype.initElems = function(input, startBtn, stopBtn, img) {
 // Handler for navigate keys
 Application.prototype.keyHandler = function(key) {
 
+	var value = parseFloat(this.inputValue);
 
 	this.imgPosition = this.img.getBoundingClientRect();
 
@@ -119,50 +109,53 @@ Application.prototype.keyHandler = function(key) {
 	switch (key) {
 		case 37: // left arrow
 			console.log('left');
-			var x = parseFloat(this.imgPosition.left) - parseFloat(this.inputValue);
+			var x = this.imgPosition.left - value;
 			this.img.style.left = x + 'px';
-			console.log(this.imgPosition);
 			break;
 		
 		case 38: // up arrow
 			console.log('up');
-			var y = parseFloat(this.imgPosition.top) - parseFloat(this.inputValue);
+			var y = this.imgPosition.top - value;
 			this.img.style.top = y + 'px';
-			console.log(this.imgPosition);
 			break;
 		
 		case 39: // right arrow
 			console.log('right');
-			var x = parseFloat(this.imgPosition.left) + parseFloat(this.inputValue);
+			var x = this.imgPosition.left + value;
 			this.img.style.left = x + 'px';
-			console.log(this.imgPosition);
 			break;
 		
 		case 40: // down arrow
 			console.log('down');
-			var y = parseFloat(this.imgPosition.top) + parseFloat(this.inputValue);
+			var y = this.imgPosition.top + value;
 			this.img.style.top = y + 'px';
-			console.log(this.imgPosition);
 			break;
 		
 		default:
 			console.log('Pressed wrong key');
 	}
-
-	// console.log(this.imgPosition);
 }
 
 // Handler for navigate keys with shift key
 Application.prototype.keyShiftHandler = function(key) {
 	console.log('-- SHIFT MODE --');
+	
+	if (this.deg === undefined) {
+		this.deg = this.degDelta;
+	}
+	else {
+		console.log('app.deg is exist')
+		this.deg = parseInt(this.deg);
+		this.deg += this.degDelta;
+	}
 
 	if (event.shiftKey && key === 37) {
-		this.img.style.transform = 'rotate(-' + this.deg + 'deg)';
-		console.log('Rotate left');
+		this.img.style.transform = 'rotate(-' + this.deg/2 + 'deg)';
+		console.log('Rotate left for ' + this.deg/2);
 	}
 	else if (event.shiftKey && key === 39) {
-		this.img.style.transform = 'rotate(' + this.deg + 'deg)';
-		console.log('Rotate right');
+		this.img.style.transform = 'rotate(' + this.deg/2 + 'deg)';
+		console.log('Rotate right for ' + this.deg/2);
 	}
 	else {
 		console.log('Pressed wrong key');
@@ -189,16 +182,15 @@ Inputer.prototype.getInputValue = function(input) {
 	const valueMax = 50;
 	
 	this.value = input.value;
-	// console.log('You type value = ' + this.value);
 	
 	if (this.value !== '') {
 		if (this.value < valueMin) {
 			this.value = valueMin;
-			// console.log('Its too little. Set value = ' + this.value);
+			console.log('Its too little. Set value = ' + this.value);
 		}
 		else if (this.value > valueMax) {
 			this.value = valueMax;
-			// console.log('Its too much. Set value = ' + this.value);
+			console.log('Its too much. Set value = ' + this.value);
 		}
 	}
 	else {
